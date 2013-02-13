@@ -1,5 +1,5 @@
-impact/tools/**/*
 impact/tools/*
-impact/lib/**/*
-impact/lib/*
+impact/lib/impact/*
+impact/lib/weltmeister/*
 impact/weltmeister.html
+*.min.js
