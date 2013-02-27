@@ -2,7 +2,8 @@ ig.module(
 	'game.main'
 ) .requires(
 	'impact.game',
-	'game.levels.one'
+	'game.levels.one',
+	'impact.debug.debug'
 ) .defines(function(){
 
 MyGame = ig.Game.extend({
@@ -16,16 +17,14 @@ MyGame = ig.Game.extend({
 				},
 
 	update: function() {
-		// Update all entities and backgroundMaps
-		this.parent();
 		// screen follows the player
 		var player = this.getEntitiesByType( EntityPlayer )[0];
 		if( player ) {
 				this.screen.x = player.pos.x - ig.system.width/2;
 				this.screen.y = player.pos.y - ig.system.height/2;
 		}
-		
-		// Add your own, additional update code here
+		// Update all entities and backgroundMaps
+		this.parent();
 	},
 	
 	draw: function() {

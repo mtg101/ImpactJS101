@@ -2,8 +2,7 @@ ig.module(
   'game.entities.player'
 ).requires(
   'impact.entity',
-	'game.entities.chatbubble',
-  'impact.debug.debug'  
+	'game.entities.chatbubble'
 ).defines(function() {
 	
 	 EntityPlayer = ig.Entity.extend({
@@ -51,7 +50,7 @@ ig.module(
         //speech
         if( ig.input.pressed('speak') ) {
           if(!ig.game.getEntityByName('playerBubble')) {
-            var parameters = {text: 'I pwn.', tracks: 'player1', margin: 20, lifeSpan: 5, shape: 'square', name: 'playerBubble'};
+            var parameters = {text: 'I pwn.', tracks: 'player1', margin: 0, lifeSpan: 5, shape: 'square', name: 'playerBubble', color:[60,70,30]};
             ig.game.spawnEntity(EntityChatbubble, 0, 0, parameters);
           }
         }
