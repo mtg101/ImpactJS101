@@ -131,7 +131,8 @@ ig.module(
 		   
 		   var x = this.pos.x-ig.game.screen.x-(this._bubbleWidth-follows.size.x)/2;
 			 var y = this.pos.y-ig.game.screen.y-this.margin-this._bubbleHeight;
-		   
+//       var x = this.pos.x+ig.system.width/2-ig.game.screen.x-(this._bubbleWidth-follows.size.x)/2;
+//       var y = this.pos.y+ig.system.height/2-ig.game.screen.y-this.margin-this._bubbleHeight;		   
 		   if ( this.shape == 'square' ) {
 		   
 			   this._context.fillRect(x,y,this._bubbleWidth,this._bubbleHeight);
