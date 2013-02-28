@@ -128,11 +128,11 @@ ig.module(
 			   this._context.strokeStyle = 'rgba(' + this.borderColor[0] + ',' + this.borderColor[1] + ',' + this.borderColor[2] + ',' + this.opacity + ')';
 				 this._context.lineWidth = this.borderWidth;
 		   }
-		   
-		   var x = this.pos.x-ig.game.screen.x-(this._bubbleWidth-follows.size.x)/2;
-			 var y = this.pos.y-ig.game.screen.y-this.margin-this._bubbleHeight;
-//       var x = this.pos.x+ig.system.width/2-ig.game.screen.x-(this._bubbleWidth-follows.size.x)/2;
-//       var y = this.pos.y+ig.system.height/2-ig.game.screen.y-this.margin-this._bubbleHeight;		   
+
+       // change by mtg101 to take account of system scale. Similar hacks should be applied to the other shapes
+		   var x = ig.system.scale*(this.pos.x-ig.game.screen.x-(this._bubbleWidth-follows.size.x)/(2*ig.system.scale));
+			 var y = ig.system.scale*(this.pos.y-ig.game.screen.y-this.margin-this._bubbleHeight/ig.system.scale);
+             
 		   if ( this.shape == 'square' ) {
 		   
 			   this._context.fillRect(x,y,this._bubbleWidth,this._bubbleHeight);
