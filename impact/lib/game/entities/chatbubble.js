@@ -31,7 +31,7 @@ ig.module(
     borderWidth: 0,
     //Opacity - 0.1 - 1
     opacity: '0.5',
-    //Name of the entity chat pubble tracks. 
+    //Name of, or reference to, the entity that the chat bubble tracks. 
     tracks: null,
     //How far is the chat bubble from entity (pixels)
     margin:20,
@@ -100,11 +100,22 @@ ig.module(
 	    if ( this.lifeSpan > 0 ) {
 		    if ( this._timeLeft.delta() > 0 ) {
 				  this.kill();
+          if(this.callback) {
+            this.callback();
+          }
 			  }
 		  }
-	    
-	    var follows = ig.game.getEntityByName(this.tracks);
-	    
+
+  	  // Note (mtg101): clearly would be more efficient to store the tracked object rather than do all this lookup
+      // every update(), but this retains the original API (ie can change name of tracked object at any point)
+      // so until performance is an issue I'll leave like this
+	    var follows;
+      if(typeof this.tracks == 'string') {
+        follows = ig.game.getEntityByName(this.tracks);
+      } else if (this.tracks instanceof ig.Entity) {
+        follows = this.tracks;
+      }
+      
 	    if ( !follows ) {
 		    this.kill();
 	    } else {
@@ -116,109 +127,112 @@ ig.module(
     
     draw: function() {
 	   
-	   var follows = ig.game.getEntityByName(this.tracks);
+	    var follows;
+      if(typeof this.tracks == 'string') {
+        follows = ig.game.getEntityByName(this.tracks);
+      } else if (this.tracks instanceof ig.Entity) {
+        follows = this.tracks;
+      }
 	   
-	   if ( follows ) {
-	   
-		   this._context.save();
-		   
-		   this._context.fillStyle = 'rgba(' + this.color[0] + ',' + this.color[1] + ',' + this.color[2] + ',' + this.opacity + ')';
-		   
-		   if ( this.borderColor ) {
-			   this._context.strokeStyle = 'rgba(' + this.borderColor[0] + ',' + this.borderColor[1] + ',' + this.borderColor[2] + ',' + this.opacity + ')';
-				 this._context.lineWidth = this.borderWidth;
-		   }
-
-       // change by mtg101 to take account of system scale. Similar hacks should be applied to the other shapes
-		   var x = ig.system.scale*(this.pos.x-ig.game.screen.x-(this._bubbleWidth-follows.size.x)/(2*ig.system.scale));
-			 var y = ig.system.scale*(this.pos.y-ig.game.screen.y-this.margin-this._bubbleHeight/ig.system.scale);
-             
-		   if ( this.shape == 'square' ) {
-		   
-			   this._context.fillRect(x,y,this._bubbleWidth,this._bubbleHeight);
-			   
-			   if ( this.borderColor ) {
-				   this._context.strokeRect(x,y,this._bubbleWidth,this._bubbleHeight);
-			   }
-		   
-		   } else if ( this.shape == 'rounded' ) {
-			   
-			   /*
-			   	Code to draw rectanglkes with rounded corners on HTML5 canvas by "Juan Mendes" from
-			   	http://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-on-html-canvas
-			   */
-			   this._context.beginPath();
-				 this._context.moveTo(x + this.radius, y);
-				 this._context.lineTo(x + this._bubbleWidth - this.radius, y);
-				 this._context.quadraticCurveTo(x + this._bubbleWidth, y, x + this._bubbleWidth, y + this.radius);
-				 this._context.lineTo(x + this._bubbleWidth, y + this._bubbleHeight - this.radius);
-				 this._context.quadraticCurveTo(x + this._bubbleWidth, y + this._bubbleHeight, x + this._bubbleWidth - this.radius, y + this._bubbleHeight);
-				 this._context.lineTo(x + this.radius, y + this._bubbleHeight);
-				 this._context.quadraticCurveTo(x, y + this._bubbleHeight, x, y + this._bubbleHeight - this.radius);
-				 this._context.lineTo(x, y + this.radius);
-				 this._context.quadraticCurveTo(x, y, x + this.radius, y);
-				 this._context.closePath();
-			   
-			   this._context.fill();
-			   
-			   if ( this.borderColor ) {
-				   this._context.stroke();
-			   }
-			   
-		   } else if ( this.shape == 'oval' ) {
-			   
-			   /*
-			   	Code to draw ovals on HTML5 canvas by "Steve Tranby" from
-			   	http://stackoverflow.com/questions/2172798/how-to-draw-an-oval-in-html5-canvas
-			   */
-			   
-			   var kappa = .5522848;
-		     ox = (this._bubbleWidth / 2) * kappa, // control point offset horizontal
-		     oy = (this._bubbleHeight / 2) * kappa, // control point offset vertical
-		     xe = x + this._bubbleWidth,           // x-end
-		     ye = y + this._bubbleHeight,           // y-end
-		     xm = x + this._bubbleWidth / 2,       // x-middle
-		     ym = y + this._bubbleHeight / 2;       // y-middle
-		
-				 this._context.beginPath();
-				 this._context.moveTo(x, ym);
-				 this._context.bezierCurveTo(x, ym - oy, xm - ox, y, xm, y);
-				 this._context.bezierCurveTo(xm + ox, y, xe, ym - oy, xe, ym);
-				 this._context.bezierCurveTo(xe, ym + oy, xm + ox, ye, xm, ye);
-				 this._context.bezierCurveTo(xm - ox, ye, x, ym + oy, x, ym);
-				 this._context.closePath();
-				  
-				 this._context.fill();
-			   
-			   if ( this.borderColor ) {
-				   this._context.stroke();
-			   }
-			   
-		   }
-		   
-		   if ( !(this.font instanceof ig.Font) ) {
-		   
-			   this._context.textAlign = 'left';  
-			   this._context.fillStyle = 'rgb(' + this.fontColor[0] + ',' + this.fontColor[1] + ',' + this.fontColor[2] + ')';
-			   
-			   var textHeight = this.determineFontHeight();
-			   
-			   this._context.fillText(this.text,x+this.padding,y+textHeight+this.padding-textHeight/4);
-			   this._context.restore();
-		   
-		   } else {
-		   
-				 this._context.restore();				
-				 
-				 var textHeight = this.font.heightForString(this.text);
-				 		   	
-			   this.font.draw( this.text, x+this.padding, y+textHeight-this.padding-textHeight/4 );
-			   
-		   }
-	   
-	   }
-	    
-    },
+      if ( !follows ) {
+        return;
+      }
+      
+      this._context.save();
+      this._context.fillStyle = 'rgba(' + this.color[0] + ',' + this.color[1] + ',' + this.color[2] + ',' + this.opacity + ')';
+      
+      if ( this.borderColor ) {
+        this._context.strokeStyle = 'rgba(' + this.borderColor[0] + ',' + this.borderColor[1] + ',' + this.borderColor[2] + ',' + this.opacity + ')';
+        this._context.lineWidth = this.borderWidth;
+      }
+      
+      // change by mtg101 to take account of system scale. Similar hacks should be applied to the other shapes
+      var x = ig.system.scale*(this.pos.x-ig.game.screen.x-(this._bubbleWidth-follows.size.x)/(2*ig.system.scale));
+      var y = ig.system.scale*(this.pos.y-ig.game.screen.y-this.margin-this._bubbleHeight/ig.system.scale);
+      
+      if ( this.shape == 'square' ) {
+      
+        this._context.fillRect(x,y,this._bubbleWidth,this._bubbleHeight);
+        
+        if ( this.borderColor ) {
+          this._context.strokeRect(x,y,this._bubbleWidth,this._bubbleHeight);
+        }
+      
+      } else if ( this.shape == 'rounded' ) {
+        
+        /*
+         Code to draw rectanglkes with rounded corners on HTML5 canvas by "Juan Mendes" from
+         http://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-on-html-canvas
+        */
+        this._context.beginPath();
+        this._context.moveTo(x + this.radius, y);
+        this._context.lineTo(x + this._bubbleWidth - this.radius, y);
+        this._context.quadraticCurveTo(x + this._bubbleWidth, y, x + this._bubbleWidth, y + this.radius);
+        this._context.lineTo(x + this._bubbleWidth, y + this._bubbleHeight - this.radius);
+        this._context.quadraticCurveTo(x + this._bubbleWidth, y + this._bubbleHeight, x + this._bubbleWidth - this.radius, y + this._bubbleHeight);
+        this._context.lineTo(x + this.radius, y + this._bubbleHeight);
+        this._context.quadraticCurveTo(x, y + this._bubbleHeight, x, y + this._bubbleHeight - this.radius);
+        this._context.lineTo(x, y + this.radius);
+        this._context.quadraticCurveTo(x, y, x + this.radius, y);
+        this._context.closePath();
+        
+        this._context.fill();
+        
+        if ( this.borderColor ) {
+          this._context.stroke();
+        }
+        
+      } else if ( this.shape == 'oval' ) {
+        
+        /*
+         Code to draw ovals on HTML5 canvas by "Steve Tranby" from
+         http://stackoverflow.com/questions/2172798/how-to-draw-an-oval-in-html5-canvas
+        */
+        
+        var kappa = .5522848;
+        ox = (this._bubbleWidth / 2) * kappa, // control point offset horizontal
+        oy = (this._bubbleHeight / 2) * kappa, // control point offset vertical
+        xe = x + this._bubbleWidth,           // x-end
+        ye = y + this._bubbleHeight,           // y-end
+        xm = x + this._bubbleWidth / 2,       // x-middle
+        ym = y + this._bubbleHeight / 2;       // y-middle
+   
+        this._context.beginPath();
+        this._context.moveTo(x, ym);
+        this._context.bezierCurveTo(x, ym - oy, xm - ox, y, xm, y);
+        this._context.bezierCurveTo(xm + ox, y, xe, ym - oy, xe, ym);
+        this._context.bezierCurveTo(xe, ym + oy, xm + ox, ye, xm, ye);
+        this._context.bezierCurveTo(xm - ox, ye, x, ym + oy, x, ym);
+        this._context.closePath();
+         
+        this._context.fill();
+        
+        if ( this.borderColor ) {
+          this._context.stroke();
+        }
+        
+      }
+      
+      if ( !(this.font instanceof ig.Font) ) {
+      
+        this._context.textAlign = 'left';  
+        this._context.fillStyle = 'rgb(' + this.fontColor[0] + ',' + this.fontColor[1] + ',' + this.fontColor[2] + ')';
+        
+        var textHeight = this.determineFontHeight();
+        
+        this._context.fillText(this.text,x+this.padding,y+textHeight+this.padding-textHeight/4);
+        this._context.restore();
+      
+      } else {
+      
+        this._context.restore();				
+        
+        var textHeight = this.font.heightForString(this.text);
+               
+        this.font.draw( this.text, x+this.padding, y+textHeight-this.padding-textHeight/4 );
+        
+      }
+  },
     
     hexToRgb: function( hex ) {
 	    var parseHex = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
